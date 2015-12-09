@@ -27,8 +27,8 @@ decr = do
 -- means go up a floor and should result in the stored state being
 -- incremented; anything else is an error.
 parseChar :: Char -> Elevator
-parseChar '(' = decr
-parseChar ')' = incr
+parseChar '(' = incr
+parseChar ')' = decr 
 parseChar c   = throwError$ "Unrecognized character " ++ [c]
 
 -- Parse an entire string of characters one at a time.
