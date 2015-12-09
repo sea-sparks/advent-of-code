@@ -6,7 +6,11 @@ import System.Environment
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
 
-import DayOne (followInstructions)
+import DayOne (followInstructions, fromMinInteger)
+
+accumulate :: (Monad m) => (a -> m b -> m b) -> m b -> [a] -> m b
+accumulate f m [] = m 
+accumulate f m (x : xs) = f x (accumulate f m xs) 
 
 fromFile :: String -> IO String
 fromFile file = do
@@ -37,4 +41,6 @@ main = do
                     Just file -> fromFile file
   case followInstructions instructions of
     Left err -> putStrLn$ "Error: " ++ err
-    Right n -> putStrLn$ show n
+    Right (n, ind) -> do
+                        putStrLn $ "Resulting floor: " ++ show n
+                        putStrLn $ "First basement index: " ++ show (fromMinInteger ind)
