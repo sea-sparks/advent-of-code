@@ -10,5 +10,5 @@ main = do
   hFlush stdout
   instructions <- getLine
   case followInstructions instructions of
-  	Left err -> putStrLn$ "Error: " ++ err
-  	Right n -> putStrLn$ show n
+    Left err -> putStrLn$ "Error: " ++ err
+    Right n -> putStrLn$ show n

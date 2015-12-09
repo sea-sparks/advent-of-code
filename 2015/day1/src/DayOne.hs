@@ -14,13 +14,13 @@ type Elevator = StateT Integer (Except String) ()
 -- in the State monad.
 incr :: (Num s, MonadState s m) => m ()
 incr = do 
-	x <- get
-	put$ x+1
+    x <- get
+    put$ x+1
 
 decr :: (Num s, MonadState s m) => m ()
 decr = do 
-	x <- get
-	put$ x-1
+    x <- get
+    put$ x-1
 
 -- Parse a single character. The '(' character means go down a floor and
 -- should result in the stored state being decremented; the ')' character
