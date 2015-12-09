@@ -32,10 +32,19 @@ parseChar ')' = incr
 parseChar c   = throwError$ "Unrecognized character " ++ [c]
 
 -- Parse an entire string of characters one at a time.
+-- We use mapM_ instead of mapM to throw away the list of trivial results
+-- computed, as the return value is not needed, only the state.
 parseString :: String -> Elevator
 parseString = mapM_ parseChar
 
--- Run the computation represented by a value of type Elevator
+-- Run the computation represented by a value of type Elevator.
+-- This happens in two steps:
+--   * First, we run `flip execStateT 0`. This takes the input Elevator and
+--     evaluates the State monad component of its execution, leaving only the
+--     inner Exception monad.
+--   * Second, we run `runExcept` on the result. This produces either an
+--     error message, if the Except monad portion of the computation failed,
+--     or the final state of the State monad computation.
 runElevator :: Elevator -> Either String Integer
 runElevator = runExcept . flip execStateT 0
 
