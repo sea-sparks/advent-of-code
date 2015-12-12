@@ -8,9 +8,6 @@ import qualified Data.Text.IO as TextIO
 
 import DayOne (followInstructions, fromMinInteger)
 
-accumulate :: (Monad m) => (a -> m b -> m b) -> m b -> [a] -> m b
-accumulate f m [] = m 
-accumulate f m (x : xs) = f x (accumulate f m xs) 
 
 fromFile :: String -> IO String
 fromFile file = do
