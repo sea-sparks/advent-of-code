@@ -2,7 +2,6 @@ module DayTwo where
 
 import Prelude hiding (length)
 import Control.Applicative ((<$>), (<*>))
-import Control.Arrow ((***))
 import Data.Monoid
 import Data.Text hiding (minimum, length, foldr, map) 
 import Text.Read (readEither)
