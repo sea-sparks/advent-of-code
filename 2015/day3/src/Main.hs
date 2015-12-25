@@ -1,19 +1,30 @@
 module Main where
 
 import DayThree
+
 import Control.Monad.State
 import System.IO 
 import System.Exit 
 import System.Environment
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TextIO
+import Data.Set (size)
+import Text.Read (readMaybe)
 
-usage :: [String] -> IO (Maybe String)
+
+usage :: [String] -> IO (Maybe (String, Int))
 usage [] = return Nothing
-usage [file] = return $ Just file
+usage [file] = return $ Just (file, 1)
+usage [file, n] = do
+    case readMaybe n of
+      Just n -> return $ Just (file, n)
+      Nothing -> do
+        putStrLn "Error: second argument must be a positive integer"
+        putStrLn "Usage: day3 [filename [numSantas]]"
+        exitFailure
 usage _ = do
     putStrLn "Error: too many arguments provided."
-    putStrLn "Usage: day1 [filename]"
+    putStrLn "Usage: day3 [filename [numSantas]]"
     exitFailure
 
 fromFile :: String -> IO String
@@ -31,9 +42,9 @@ main :: IO ()
 main = do
   args <- getArgs
   result <- usage args
-  dirs <- case result of
-            Nothing -> fromTerm
-            Just file -> fromFile file
-  case execStateT (followDirections dirs) 1 of
+  (dirs, n) <- case result of
+            Nothing -> flip (,) 1 <$> fromTerm
+            Just (file, n) -> flip (,) n <$> fromFile file
+  case followDirections n dirs of
     Left err -> putStrLn err
-    Right vis -> putStrLn$ "Houses visited: " ++ show vis
+    Right (Houses _ vis) -> putStrLn$ "Houses visited: " ++ show (size vis)

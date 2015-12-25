@@ -1,79 +1,46 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module DayThree where
 
-import Control.Monad
-import Control.Monad.State
+import Prelude hiding (replicate)
+import Data.Set 
+import Data.Sequence hiding (take, singleton)
 import Control.Monad.Except
-import Control.Monad.Trans.Class
 
-data HouseRow = HouseRow {left :: [Integer], here :: Integer, right :: [Integer]}
-data Houses = Houses {down :: [HouseRow],  center :: HouseRow, up :: [HouseRow]}
 
-startRow :: HouseRow
-startRow = HouseRow (repeat 0) 1 (repeat 0)
+data Loc = Loc { xCoord :: Int, yCoord :: Int } deriving (Eq, Show)
 
-otherRow :: HouseRow 
-otherRow = HouseRow (repeat 0) 0 (repeat 0)
+instance Ord Loc where
+  compare (Loc x1 y1) (Loc x2 y2) =
+      case (compare x1 x2, compare y1 y2) of
+        (EQ, yc) -> yc 
+        (xc, _)  -> xc 
 
-start :: Houses
-start = Houses (repeat otherRow) startRow (repeat otherRow)
+data Houses = Houses { santas :: Seq Loc
+                     , visited :: Set Loc
+                     }
 
-goLeftRow :: HouseRow -> HouseRow
-goLeftRow (HouseRow (l : ls) h r) = HouseRow ls l (h : r)
+start :: Int -> Houses
+start n = Houses (replicate n $ Loc 0 0) (singleton $ Loc 0 0)
 
-goRightRow :: HouseRow -> HouseRow
-goRightRow (HouseRow l h (r : rs)) = HouseRow (h : l) r rs
+data Dir = LEFT | RIGHT | UP | DOWN 
 
-goLeft :: Houses -> Houses
-goLeft (Houses d c u) = Houses (map goLeftRow d) (goLeftRow c) (map goLeftRow u)
+dir :: Dir -> Loc -> Loc 
+dir LEFT  (Loc x y) = Loc (x-1) y
+dir RIGHT (Loc x y) = Loc (x+1) y
+dir UP    (Loc x y) = Loc x (y+1)
+dir DOWN  (Loc x y) = Loc x (y-1)
 
-goRight :: Houses -> Houses
-goRight (Houses d c u) = Houses (map goRightRow d) (goRightRow c) (map goRightRow u)
-
-goUp :: Houses -> Houses
-goUp (Houses (u : us) c d) = Houses us u (c : d)
-
-goDown :: Houses -> Houses
-goDown (Houses u c (d : ds)) = Houses (c : u) d ds
-
-visitRow :: (Monad m) => (Integer -> m Integer) -> HouseRow -> m HouseRow
-visitRow f (HouseRow l h r) = do 
-  h' <- f h
-  return $ HouseRow l h' r 
-
-visit :: (Monad m) => (Integer -> m Integer) -> Houses -> m Houses
-visit f (Houses d c u) = do 
-  c' <- visitRow f c 
-  return $ Houses d c' u 
+go :: Dir -> Houses -> Houses
+go d (Houses (viewl -> loc :< locs) vis) =
+  Houses (locs |> dir d loc) (insert (dir d loc) vis)
 
 parseArrow :: Char -> Either String (Houses -> Houses)
-parseArrow '<' = return goLeft 
-parseArrow '>' = return goRight 
-parseArrow 'v' = return goDown
-parseArrow '^' = return goUp
+parseArrow '<' = return $ go LEFT
+parseArrow '>' = return $ go RIGHT
+parseArrow 'v' = return $ go DOWN
+parseArrow '^' = return $ go UP
 parseArrow c   = throwError $ "Error: " ++ [c] ++ " is not a valid direction"
 
-incr :: (Num s, MonadState s m) => m ()
-incr = do 
-  x <- get
-  put$ x+1
-
-deliver :: Integer -> StateT Integer (Either String) Integer
-deliver n = do 
-  when (n == 0) incr
-  return $ n+1
-
-followDirections :: [Char] -> StateT Integer (Either String) Houses
-followDirections = flip followDirections' start 
-
-followDirections' :: [Char] -> Houses -> StateT Integer (Either String) Houses
-followDirections' [] houses = do
-  return houses
-followDirections' (c : cs) houses = do
-  dir <- lift $ parseArrow c
-  houses' <- visit deliver (dir houses)
-  followDirections' cs houses' 
-
-
-
-
-
+followDirections :: Int -> [Char] -> Either String Houses
+followDirections n = foldM (\houses c -> parseArrow c <*> return houses) $ start n
